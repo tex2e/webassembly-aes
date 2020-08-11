@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang=en-us>
+
+<head>
+  <meta charset=utf-8>
+  <meta content="text/html; charset=utf-8" http-equiv=Content-Type>
+  <title>AES Encryption</title>
+</head>
+
+<body>
+  <button class=mybutton>Run AES Encrypt &amp; Decrypt (aes.c)</button><br>
+  <script>
+    document.querySelector(".mybutton").addEventListener("click", (function () {
+      performance.mark('暗号化・復号の処理:Start');
+      
+      var length = 32 * 5;
+      var plaintext_ptr  = Module._malloc(length);
+      var ciphertext_ptr = Module._malloc(length);
+      var decrypted_ptr  = Module._malloc(length);
+      var iv_ptr         = Module._malloc(16);
+      var key_ptr        = Module._malloc(16);
+
+      // iv & key
+      var iv_array  = hex2array("00000000000000000000000000000000");
+      var key_array = hex2array("000102030405060708090a0b0c0d0e0f");
+      Module.HEAP8.set(iv_array, iv_ptr);
+      Module.HEAP8.set(key_array, key_ptr);
+
+      // plaintext
+      var plaintext_array = hex2array(
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff" +
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff" +
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff" +
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff" +
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
+      );
+      Module.HEAP8.set(plaintext_array, plaintext_ptr);
+      
+      // ciphertext
+      Module._aes_128_encrypt(plaintext_ptr, length, ciphertext_ptr, iv_ptr, key_ptr);
+      var ciphertext_array = new Uint8Array(Module.HEAP8.buffer, ciphertext_ptr, length);
+      console.log('ciphertext:', array2hex(ciphertext_array));
+
+      // decrypted
+      Module._aes_128_decrypt(ciphertext_ptr, length, decrypted_ptr, iv_ptr, key_ptr);
+      var decrypted_array = new Uint8Array(Module.HEAP8.buffer, decrypted_ptr, length);
+      console.log('decrypted: ', array2hex(decrypted_array));
+
+      Module._free(plaintext_ptr);
+      Module._free(ciphertext_ptr);
+      Module._free(decrypted_ptr);
+      Module._free(iv_ptr);
+      Module._free(key_ptr);
+
+      performance.mark('暗号化・復号の処理:End');
+      performance.measure(
+        '暗号化・復号の処理',
+        '暗号化・復号の処理:Start',
+        '暗号化・復号の処理:End'
+      );
+      const results = performance.getEntriesByName('暗号化・復号の処理');
+      const time = results[0].duration;
+      console.log('実行時間 = ' + time + 'ミリ秒');
+    }));
+
+    function hex2array(hex) {
+      return Uint8Array.from(hex.match(/.{1,2}/g).map(x => parseInt(x, 16)));
+    }
+
+    function array2hex(uint8array) {
+      return Array.prototype.map.call(uint8array, x => (('0' + x.toString(16)).slice(-2))).join('');
+    }
+  </script>
+  <script async src=wasm.js></script>
+</body>
+
+</html>

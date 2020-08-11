@@ -1,0 +1,45 @@
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AES Encryption</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/aes.min.js"></script>
+</head>
+<body>
+  <button class=mybutton>Run AES Encrypt &amp; Decrypt (CryptoJS)</button><br>
+  <script>
+    document.querySelector(".mybutton").addEventListener("click", (function () {
+      performance.mark('暗号化・復号の処理:Start');
+
+      var iv  = CryptoJS.enc.Hex.parse("00000000000000000000000000000000");
+      var key = CryptoJS.enc.Hex.parse("000102030405060708090a0b0c0d0e0f");
+      var plaintext = CryptoJS.enc.Hex.parse(
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff" +
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff" +
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff" +
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff" +
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
+      );
+      var option = {iv: iv, padding: CryptoJS.pad.NoPadding};
+      var encrypted = CryptoJS.AES.encrypt(plaintext, key, option);
+      var ciphertext = encrypted.ciphertext;
+      console.log('ciphertext:', CryptoJS.enc.Hex.stringify(ciphertext));
+      var decrypted = CryptoJS.AES.decrypt(encrypted, key, option);
+      console.log('decrypted: ', CryptoJS.enc.Hex.stringify(decrypted));
+
+      performance.mark('暗号化・復号の処理:End');
+      performance.measure(
+        '暗号化・復号の処理',
+        '暗号化・復号の処理:Start',
+        '暗号化・復号の処理:End'
+      );
+      const results = performance.getEntriesByName('暗号化・復号の処理');
+      const time = results[0].duration;
+      console.log('実行時間 = ' + time + 'ミリ秒');
+    }));
+  </script>
+</body>
+</html>
